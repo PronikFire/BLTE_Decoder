@@ -57,8 +57,8 @@ byte[] blteEncoded = BLTE.Encode(blocks, tableFormat);
 File.WriteAllBytes("output.blte", blteEncoded);
 ```
 
-> [!IMPORTANT]
-> If you are going to encode the data, you need to set Hash and LogicalSize to Block. If you don't do this, the data will be encoded incorrectly. UncompressedHash only needs to be set if you are going to encode with TableFormat equal to 0x10.
+> [!NOTE]
+> If you are going to encode the data, you can fill in additional fields such as Hash, logicalSize, encodingModeChar and uncompressedHash.
 
 ## References
 

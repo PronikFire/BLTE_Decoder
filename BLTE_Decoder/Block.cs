@@ -2,8 +2,14 @@
 
 namespace BLTE_Decoder;
 
-public class Block
+/// <summary>
+/// Represents a BLTE data block, containing encoding information, hashes, and raw data.
+/// </summary>
+public class Block(byte[] data)
 {
+    /// <summary>
+    /// Gets the encoding mode of the block, determined by <see cref="encodingModeChar"/>.
+    /// </summary>
     public EncodingMode EncodingMode
     {
         get
@@ -13,6 +19,10 @@ public class Block
                 : EncodingMode.Unknown;
         }
     }
+
+    /// <summary>
+    /// Gets or sets the hash of the block (16 bytes). Used for data integrity verification.
+    /// </summary>
     public byte[] Hash
     {
         get => hash;
@@ -23,6 +33,10 @@ public class Block
             hash = value;
         }
     }
+
+    /// <summary>
+    /// Gets or sets the hash of the uncompressed block data (16 bytes). Used for verifying original data integrity.
+    /// </summary>
     public byte[] UncompressedHash
     {
         get => uncompressedHash;
@@ -34,13 +48,35 @@ public class Block
         }
     }
 
+    /// <summary>
+    /// The character representing the encoding mode of the block (e.g., 'N', 'Z', '4', 'F', 'E').
+    /// </summary>
     public char encodingModeChar = 'N';
-    public uint logicalSize;
-    public byte[] rawData = [];
 
-    private byte[] hash = [];
-    private byte[] uncompressedHash = [];
+    /// <summary>
+    /// The logical size of the block (size of the original data before encoding).
+    /// </summary>
+    public uint logicalSize = 0;
 
+    /// <summary>
+    /// The raw data of the block (byte array).
+    /// </summary>
+    public byte[] data = data??throw new ArgumentNullException(nameof(data));
+
+    /// <summary>
+    /// Backing field for the <see cref="Hash"/> property.
+    /// </summary>
+    private byte[] hash = new byte[16];
+
+    /// <summary>
+    /// Backing field for the <see cref="UncompressedHash"/> property.
+    /// </summary>
+    private byte[] uncompressedHash = new byte[16];
+
+    /// <summary>
+    /// Returns a string representation of the block, including encoding mode, size, and hashes.
+    /// </summary>
+    /// <returns>A string with block information.</returns>
     public override string ToString() => $"Block(EncodingMode={EncodingMode}," +
         $" LogicalSize={logicalSize}," +
         $" Hash={Convert.ToHexString(Hash)}," +

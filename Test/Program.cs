@@ -10,18 +10,16 @@ internal class Program
     {
         Block[] blocks =
         [
-            new()
+            new(Encoding.UTF8.GetBytes("Test1"))
             {
                 encodingModeChar = 'N',
-                rawData = Encoding.UTF8.GetBytes("Test1"),
                 logicalSize = (uint)"Test1".Length,
                 Hash = Encoding.UTF8.GetBytes("1111111111111111"),
                 UncompressedHash = Encoding.UTF8.GetBytes("2222222222222222"),
             },
-            new()
+            new(Encoding.UTF8.GetBytes("Test2"))
             {
                 encodingModeChar = 'Z',
-                rawData = Encoding.UTF8.GetBytes("Test2"),
                 logicalSize = (uint)"Test2".Length,
                 Hash = Encoding.UTF8.GetBytes("3333333333333333"),
                 UncompressedHash = Encoding.UTF8.GetBytes("4444444444444444"),

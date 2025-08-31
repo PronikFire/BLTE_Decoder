@@ -5,8 +5,19 @@ using System.Text;
 
 namespace BLTE_Decoder;
 
+/// <summary>
+/// Provides static methods for encoding and decoding BLTE data blocks.
+/// </summary>
 public static class BLTE
 {
+    /// <summary>
+    /// Decodes a BLTE-formatted byte array into an array of <see cref="Block"/> objects.
+    /// </summary>
+    /// <param name="data">The BLTE data to decode.</param>
+    /// <param name="tableFormat">Outputs the table format byte used in the BLTE header.</param>
+    /// <returns>An array of decoded <see cref="Block"/> objects.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="data"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown if the data is invalid or corrupted.</exception>
     public static Block[] Decode(byte[] data, out byte tableFormat)
     {
         ArgumentNullException.ThrowIfNull(data);
@@ -40,10 +51,9 @@ public static class BLTE
 
             uint rawSize = BinaryPrimitives.ReadUInt32BigEndian(data.AsSpan(curHeaderPos, 4));
 
-            Block block = new()
+            Block block = new(data[(curDataPos + 1)..(curDataPos + (int)rawSize)])
             {
                 encodingModeChar = (char)data[curDataPos],
-                rawData = data[(curDataPos + 1)..(curDataPos + (int)rawSize)],
                 logicalSize = BinaryPrimitives.ReadUInt32BigEndian(data.AsSpan(curHeaderPos + 4, 4)),
                 Hash = data[(curHeaderPos + 8)..(curHeaderPos + 24)]
             };
@@ -56,6 +66,14 @@ public static class BLTE
         return blocks;
     }
 
+    /// <summary>
+    /// Encodes an array of <see cref="Block"/> objects into a BLTE-formatted byte array.
+    /// </summary>
+    /// <param name="blocks">The blocks to encode.</param>
+    /// <param name="tabletFormat">The table format byte to use in the BLTE header (0x0F or 0x10).</param>
+    /// <returns>A byte array containing the encoded BLTE data.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="blocks"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown if the blocks array is empty or the table format is unsupported.</exception>
     public static byte[] Encode(Block[] blocks, byte tabletFormat)
     {
         ArgumentNullException.ThrowIfNull(blocks);
@@ -67,7 +85,7 @@ public static class BLTE
             throw new ArgumentException("Unsupported BLTE table format.");
 
         uint headerSize = 12 + (uint)blocks.Length * (uint)(tabletFormat == 0x0F ? 24 : 40);
-        uint totalSize = headerSize + (uint)blocks.Sum(b => (uint)b.rawData.Length + 1);
+        uint totalSize = headerSize + (uint)blocks.Sum(b => (uint)b.data.Length + 1);
 
         byte[] result = new byte[totalSize];
 
@@ -85,15 +103,15 @@ public static class BLTE
             Block block = blocks[i];
 
             int curHeaderPos = 12 + i * blockSize;
-            BinaryPrimitives.WriteUInt32BigEndian(result.AsSpan(curHeaderPos, 4), (uint)block.rawData.Length + 1);
+            BinaryPrimitives.WriteUInt32BigEndian(result.AsSpan(curHeaderPos, 4), (uint)block.data.Length + 1);
             BinaryPrimitives.WriteUInt32BigEndian(result.AsSpan(curHeaderPos + 4, 4), block.logicalSize);
             Array.Copy(block.Hash, 0, result, curHeaderPos + 8, 16);
             if (tabletFormat == 0x10)
                 Array.Copy(block.UncompressedHash, 0, result, curHeaderPos + 24, 16);
 
             result[cuDataPos] = (byte)block.encodingModeChar;
-            Array.Copy(block.rawData, 0, result, cuDataPos + 1, block.rawData.Length);
-            cuDataPos += block.rawData.Length + 1;
+            Array.Copy(block.data, 0, result, cuDataPos + 1, block.data.Length);
+            cuDataPos += block.data.Length + 1;
         }
         return result;
     }
